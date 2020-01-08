@@ -120,9 +120,29 @@ skip_single_pixel_start:
 	STRNEH	color, [xstart], #2
 	SUBNE	length, #2
 
-	@ xstart is already rounded up to nearest word
-	@ length is based on current (rounded up) xstart
-	@ now round length down to nearest word and store in jump
+	@ now xstart is rounded up to nearest word
+	@ and length is based on current (rounded up) xstart
+
+	CMP		length, #96
+	BLT		skip_fast_copy
+	PUSH	{r4-r6}
+	MOV		r4, r3
+	MOV		r5, r3
+	MOV		r6, r3
+	
+	@ round length down to nearest 4 words and store in jump
+	BIC		jump:r12, length, #0x0F
+	RSB		jump, jump, #(240-16)
+	ADD		pc, jump, LSR #2
+	.rept	15
+		STMIA	xstart!, {r3-r6}
+	.endr
+	
+	AND		length, #0x0F
+	POP		{r4-r6}
+skip_fast_copy:
+
+	@ round length down to nearest word and store in jump
 	BIC		jump:r12, length, #0x3
 	RSB		jump, jump, #(240-4)
 	ADD		pc, jump
@@ -140,4 +160,4 @@ one_pixel_left:
 	BIC		tmp_pxl, #0xFF
 	ORR		tmp_pxl, color, LSR #24
 	STRH	tmp_pxl, [xend, #-1]
-	BX		lr
+	BX		lr		@ final return
