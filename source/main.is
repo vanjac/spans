@@ -123,30 +123,27 @@ skip_single_pixel_start:
 	@ now xstart is rounded up to nearest word
 	@ and length is based on current (rounded up) xstart
 
-	CMP		length, #96
-	BLT		skip_fast_copy
-	PUSH	{r4-r6}
-	MOV		r4, r3
-	MOV		r5, r3
-	MOV		r6, r3
-	
-	@ round length down to nearest 4 words and store in jump
-	BIC		jump:r12, length, #0x0F
-	RSB		jump, jump, #(240-16)
+	RSB		length, length, #255	@ inverts lower 8 bits
+	jump:r2
+
+	CMP		jump, #(255-64)
+	BGT		skip_fast_copy
+	PUSH	{r4,r5}
+	MOV		r4, color
+	MOV		r5, color
+	MOV		r12, color
+
 	ADD		pc, jump, LSR #2
-	.rept	15
-		STMIA	xstart!, {r3-r6}
+	.rept	16
+		STMIA	xstart!, {color,r4,r5,r12}
 	.endr
-	
-	AND		length, #0x0F
-	POP		{r4-r6}
+
+	ORR		jump, #0xF0
+	POP		{r4,r5}
 skip_fast_copy:
 
-	@ round length down to nearest word and store in jump
-	BIC		jump:r12, length, #0x3
-	RSB		jump, jump, #(240-4)
 	ADD		pc, jump
-	.rept	60
+	.rept	64
 		STR		color, [xstart], #4
 	.endr
 
