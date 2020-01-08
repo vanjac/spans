@@ -125,25 +125,15 @@ skip_single_pixel_start:
 
 	RSB		length, length, #255	@ inverts lower 8 bits
 	jump:r2
-
-	CMP		jump, #(255-24)
-	BGT		skip_fast_copy
-	MOV		r12, color
-
+	MOV		color2:r12, color
 	@ copy 8px blocks
 	ADD		pc, jump, LSR #1
 	.rept	32
-		STMIA	xstart!, {color,r12}
+		STMIA	xstart!, {color,color2}
 	.endr
 
-	ORR		jump, #0xF8				@ only the last 7 pixels
-skip_fast_copy:
-
-	@ copy 4 px blocks
-	ADD		pc, jump
-	.rept	64
-		STR		color, [xstart], #4
-	.endr
+	TST		jump, #0x4		@ (inverted)
+	STREQ	color, [xstart], #4
 
 	TST		xend, #2
 	STRNEH	color, [xend, #-2]
