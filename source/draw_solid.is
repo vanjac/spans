@@ -1,0 +1,63 @@
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+    .global draw_span_solid
+draw_span_solid:
+	xstart:r0
+	xend:r1
+	row:r2		@ vram address
+	color:r3
+
+	@ return if length is zero
+	CMP		xstart, xend
+	BXGE	lr
+
+	ADD		xstart, row
+	ADD		xend, row
+
+	@ check if xstart is odd
+	TST		xstart, #1
+	BEQ		skip_single_pixel_start
+	LDRH	tmp_pxl:r12, [xstart, #-1]
+	BIC		tmp_pxl, #0xFF00
+	ORR		tmp_pxl, color, LSL #8
+	@ will round down to hword. don't worry about it
+	STRH	tmp_pxl, [xstart], #1
+skip_single_pixel_start:
+
+	SUB		length:r2, xend, xstart
+	CMP		length, #1
+	BLE		one_pixel_left	@ or zero pixels left
+
+	TST		xstart, #2
+	@ draw 2 pixels
+	STRNEH	color, [xstart], #2
+	SUBNE	length, #2
+
+	@ now xstart is rounded up to nearest word
+	@ and length is based on current (rounded up) xstart
+
+	RSB		length, length, #255	@ inverts lower 8 bits
+	jump:r2
+	MOV		color2:r12, color
+	@ copy 8px blocks
+	ADD		pc, jump, LSR #1
+	.rept	32
+		STMIA	xstart!, {color,color2}
+	.endr
+
+	TST		jump, #0x4		@ (inverted)
+	STREQ	color, [xstart], #4
+
+	TST		xend, #2
+	STRNEH	color, [xend, #-2]
+
+one_pixel_left:
+	TST		xend, #1
+	BXEQ	lr
+	LDRH	tmp_pxl:r12, [xend, #-1]
+	BIC		tmp_pxl, #0xFF
+	ORR		tmp_pxl, color, LSR #24
+	STRH	tmp_pxl, [xend, #-1]
+	BX		lr		@ final return

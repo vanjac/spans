@@ -1,8 +1,8 @@
 	.align  2
 	.code   16
 	.thumb_func
-	.type   main, %function
 	.global	main
+	.type   main, %function
 main:
 	@ setup interrupts
 
@@ -32,7 +32,7 @@ main:
 	STRH	color, [mem_palette, #4]
 
 	MOV		xstart_store:r7, #0
-	LDR		draw_span_fn:r4, =draw_span
+	LDR		draw_span_solid_fn:r4, =draw_span_solid
 loop:
     LDR     cpuset_src:r0, =c_pal_green
     LDR     cpuset_dst:r1, =0x06000000
@@ -53,7 +53,7 @@ for_row:
 	MOV		xstart:r0, xstart_store
 	ADD		xend:r1, xstart, count
 	MOV		row:r2, row_store
-	BL		draw_span_thumb
+	BL		draw_span_solid_thumb
 	ADD		row_store, #240
 	SUB		count, #1
 	BNE		for_row
@@ -62,8 +62,8 @@ for_row:
 	ADD		xstart_store, #1
 	B		loop
 
-draw_span_thumb:
-	BX		draw_span_fn
+draw_span_solid_thumb:
+	BX		draw_span_solid_fn
 
 
 	.align	2
@@ -83,66 +83,3 @@ intr_handle:
     STRH    irq, [reg_ifbios]	@ bios
     BX      lr
 
-
-	.section	.iwram, "ax", %progbits
-	.align	2
-	.code	32
-	.arm
-draw_span:
-	xstart:r0
-	xend:r1
-	row:r2		@ vram address
-	color:r3
-
-	@ return if length is zero
-	CMP		xstart, xend
-	BXGE	lr
-
-	ADD		xstart, row
-	ADD		xend, row
-
-	@ check if xstart is odd
-	TST		xstart, #1
-	BEQ		skip_single_pixel_start
-	LDRH	tmp_pxl:r12, [xstart, #-1]
-	BIC		tmp_pxl, #0xFF00
-	ORR		tmp_pxl, color, LSL #8
-	@ will round down to hword. don't worry about it
-	STRH	tmp_pxl, [xstart], #1
-skip_single_pixel_start:
-
-	SUB		length:r2, xend, xstart
-	CMP		length, #1
-	BLE		one_pixel_left	@ or zero pixels left
-
-	TST		xstart, #2
-	@ draw 2 pixels
-	STRNEH	color, [xstart], #2
-	SUBNE	length, #2
-
-	@ now xstart is rounded up to nearest word
-	@ and length is based on current (rounded up) xstart
-
-	RSB		length, length, #255	@ inverts lower 8 bits
-	jump:r2
-	MOV		color2:r12, color
-	@ copy 8px blocks
-	ADD		pc, jump, LSR #1
-	.rept	32
-		STMIA	xstart!, {color,color2}
-	.endr
-
-	TST		jump, #0x4		@ (inverted)
-	STREQ	color, [xstart], #4
-
-	TST		xend, #2
-	STRNEH	color, [xend, #-2]
-
-one_pixel_left:
-	TST		xend, #1
-	BXEQ	lr
-	LDRH	tmp_pxl:r12, [xend, #-1]
-	BIC		tmp_pxl, #0xFF
-	ORR		tmp_pxl, color, LSR #24
-	STRH	tmp_pxl, [xend, #-1]
-	BX		lr		@ final return
