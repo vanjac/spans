@@ -1,0 +1,18 @@
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+	.global	fastdivide
+fastdivide:
+	lo:r0
+	den:r1		@ (negative!!)
+	hi:r2
+	@ http://me.henri.net/fp-div.html
+	MOV     hi, #0
+	ADDS    lo, lo, lo
+	.rept   32
+		ADCS    hi, den, hi, LSL #1
+		SUBCC   hi, hi ,den
+		ADCS    lo, lo, lo
+	.endr
+	BX      lr
