@@ -4,6 +4,8 @@
 	.type   main, %function
 	.global	main
 main:
+	@ setup interrupts
+
     LDR     reg_intr_handle:r0, =0x03007FFC
     LDR     intr_handle_ptr:r1, =intr_handle
     STR     intr_handle_ptr, [reg_intr_handle]
@@ -14,6 +16,8 @@ main:
 
     MOV     enable:r1, #1
     STRH    enable, [reg_ie, #0x08]         @ reg_ime
+
+	@ setup screen
 
 	LDR     reg_dispcnt:r0, =0x04000000
 	LDR     value:r1, =(4 | (1<<10))
@@ -39,6 +43,13 @@ loop:
 	LDR		color:r3, =0x01010101
 	MOV		count:r5, #160
 for_row:
+	@ reset timer (for testing speed)
+    LDR     reg_tm0cnt_h:r0, =0x04000102
+    MOV     timer0cnt:r1, #0
+    STRH    timer0cnt, [reg_tm0cnt_h]
+    MOV     timer0cnt:r1, #(1<<7)
+    STRH    timer0cnt, [reg_tm0cnt_h]
+
 	MOV		xstart:r0, xstart_store
 	ADD		xend:r1, xstart, count
 	MOV		row:r2, row_store
