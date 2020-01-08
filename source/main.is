@@ -1,0 +1,132 @@
+	.align  2
+	.code   16
+	.thumb_func
+	.type   main, %function
+	.global	main
+main:
+    LDR     reg_intr_handle:r0, =0x03007FFC
+    LDR     intr_handle_ptr:r1, =intr_handle
+    STR     intr_handle_ptr, [reg_intr_handle]
+
+    LDR     reg_ie:r0, =0x04000200
+    MOV     ie:r1, #1		@ vblank
+    STRH    ie, [reg_ie]
+
+    MOV     enable:r1, #1
+    STRH    enable, [reg_ie, #0x08]         @ reg_ime
+
+	LDR     reg_dispcnt:r0, =0x04000000
+	LDR     value:r1, =(4 | (1<<10))
+	STRH    value, [reg_dispcnt]
+    LDR     vblank_irq:r1, =(1<<3)
+    STRH    vblank_irq, [reg_dispcnt, #4]   @ reg_dispstat
+	
+	LDR     mem_palette:r0, =0x05000000
+	LDR     color:r1, =0x7FFF		@ white
+	STRH	color, [mem_palette, #2]
+	LDR		color, =0x03E0			@ green
+	STRH	color, [mem_palette, #4]
+
+	MOV		xstart_store:r7, #0
+	LDR		draw_span_fn:r4, =draw_span
+loop:
+    LDR     cpuset_src:r0, =c_pal_green
+    LDR     cpuset_dst:r1, =0x06000000
+    LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
+    SWI     0x0C    @ CpuFastSet
+
+	LDR		row_store:r6, =0x06000000		@ row 30
+	LDR		color:r3, =0x01010101
+	MOV		count:r5, #160
+for_row:
+	MOV		xstart:r0, xstart_store
+	ADD		xend:r1, xstart, count
+	MOV		row:r2, row_store
+	BL		draw_span_thumb
+	ADD		row_store, #240
+	SUB		count, #1
+	BNE		for_row
+
+	SWI		0x05		@ VBlankIntrWait
+	ADD		xstart_store, #1
+	B		loop
+
+draw_span_thumb:
+	BX		draw_span_fn
+
+
+	.align	2
+c_pal_green:
+	.word	0x02020202
+
+
+    .section    .iwram, "ax", %progbits
+    .align  2
+    .code   32
+    .arm
+intr_handle:
+    LDR     reg_if:r0, =0x04000202
+    LDRH    irq:r1, [reg_if]
+    STRH    irq, [reg_if]       @ acknowledge interrupts
+    LDR     reg_ifbios:r0, =0x03007FF8
+    STRH    irq, [reg_ifbios]	@ bios
+    BX      lr
+
+
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+draw_span:
+	xstart:r0
+	xend:r1
+	row:r2		@ vram address
+	color:r3
+
+	@ return if length is zero
+	CMP		xstart, xend
+	BXGE	lr
+
+	ADD		xstart, row
+	ADD		xend, row
+
+	@ check if xstart is odd
+	TST		xstart, #1
+	BEQ		skip_single_pixel_start
+	LDRH	tmp_pxl:r12, [xstart, #-1]
+	BIC		tmp_pxl, #0xFF00
+	ORR		tmp_pxl, color, LSL #8
+	@ will round down to hword. don't worry about it
+	STRH	tmp_pxl, [xstart], #1
+skip_single_pixel_start:
+
+	SUB		length:r2, xend, xstart
+	CMP		length, #1
+	BLE		one_pixel_left	@ or zero pixels left
+
+	TST		xstart, #2
+	@ draw 2 pixels
+	STRNEH	color, [xstart], #2
+	SUBNE	length, #2
+
+	@ xstart is already rounded up to nearest word
+	@ length is based on current (rounded up) xstart
+	@ now round length down to nearest word and store in jump
+	BIC		jump:r12, length, #0x3
+	RSB		jump, jump, #(240-4)
+	ADD		pc, jump
+	.rept	60
+		STR		color, [xstart], #4
+	.endr
+
+	TST		xend, #2
+	STRNEH	color, [xend, #-2]
+
+one_pixel_left:
+	TST		xend, #1
+	BXEQ	lr
+	LDRH	tmp_pxl:r12, [xend, #-1]
+	BIC		tmp_pxl, #0xFF
+	ORR		tmp_pxl, color, LSR #24
+	STRH	tmp_pxl, [xend, #-1]
+	BX		lr
