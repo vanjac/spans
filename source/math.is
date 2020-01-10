@@ -2,17 +2,78 @@
 	.align	2
 	.code	32
 	.arm
-	.global	fastdivide
-fastdivide:
-	lo:r0
+	.global	divide
+divide:
+	num:r0		@ numerator, return quotient
 	den:r1		@ (negative!!)
-	hi:r2
+
 	@ http://me.henri.net/fp-div.html
-	MOV     hi, #0
-	ADDS    lo, lo, lo
+	@ (page has some mistakes. a few have been marked corrected)
+
+	CMP		den, #0				@ divide by zero?
+	BEQ		div0
+
+	EOR		sign:r12, num, den
+	RSBMI	den, den, #0		@ absolute value (from CMP)
+
+	CMP		num, #0
+	RSBMI	num, num, #0			@ absolute value
+
+	SUBS	den_min1:r2, den, #1
+	BEQ		div1				@ divide by one CORRECTED (happened before abs(num))
+
+	CMP		num, den
+	BLE		numLeDen			@ CORRECTED (was BLS)
+
+	TST		den, den_min1		@ if den & (den-1) == 0
+	BEQ		powerOf2			@ den is a power of 2
+
+	RSB		den, den, #0		@ den needs to be negative for divide loop
+
+	MOV     mod:r2, #0			@ remainder
+	ADDS    num, num, num
 	.rept   32
-		ADCS    hi, den, hi, LSL #1
-		SUBCC   hi, hi ,den
-		ADCS    lo, lo, lo
+		ADCS    mod, den, mod, LSL #1
+		SUBCC   mod, mod ,den
+		ADCS    num, num, num
 	.endr
+	CMP		sign, #0		@ correct quotient sign
+	RSBLT	num, #0
 	BX      lr
+
+div0:
+	MOV		num, #0
+	BX		lr
+
+div1:
+	CMP		sign, #0
+	RSBMI	num, num, #0
+	BX		lr
+
+numLeDen:
+	MOV		num, #0
+	MOVEQ	num, sign, ASR #31	@ from CMP
+	ORREQ	num, num, #1		@ in case sign is 0
+	BX		lr
+
+powerOf2:
+	@ count the bits. things get spooky
+	MOV		count:r3, #0
+
+	CMP		den, #(1 << 16)
+	MOVHS	count, #16
+	LSRHS	den, #16
+	CMP		den, #(1 << 8)
+	ADDHS	count, #8
+	LSRHS	den, #8
+	CMP		den, #(1 << 4)
+	ADDHS	count, #4
+	LSRHS	den, #4
+	CMP		den, #(1 << 2)
+	ADDHI	count, #3	@ spooky
+	ADDLS	count, den, LSR #1
+
+	LSR		num, count
+	CMP		sign, #0
+	RSBMI	num, num, #0		@ correct sign
+	BX		lr
