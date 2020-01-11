@@ -5,7 +5,7 @@
 	.global	divide
 divide:
 	num:r0		@ numerator, return quotient
-	den:r1		@ (negative!!)
+	den:r1		@ denominator
 
 	@ http://me.henri.net/fp-div.html
 	@ (page has some mistakes. a few have been marked corrected)
@@ -28,10 +28,31 @@ divide:
 	TST		den, den_min1		@ if den & (den-1) == 0
 	BEQ		powerOf2			@ den is a power of 2
 
+	@ here comes the divide loop
+	@ except we can skip part of it
+	@ count leading bits common to both numerator and demoninator
+	@ super spooky
+	MOV		count:r3, #28
+	LSR		mod:r2, num, #4		@ remainder
+
+	CMP		den, mod, LSR #12
+	SUBLE	count, #16
+	LSRLE	mod, #16
+	CMP		den, mod, LSR #4
+	SUBLE	count, #8
+	LSRLE	mod, #8
+	CMP		den, mod
+	SUBLE	count, #4
+	LSRLE	mod, #4
+
+	LSL		num, count			@ shift left to remove leading bits
 	RSB		den, den, #0		@ den needs to be negative for divide loop
 
-	MOV     mod:r2, #0			@ remainder
-	ADDS    num, num, num
+	ADDS    num, num, num		@ start of loop
+	@ skip count loops
+	ADD		count, count, LSL #1		@ count *= 3
+	ADD		pc, count, LSL #2			@ jump count instructions CORRECTED
+	NOP							@ padding
 	.rept   32
 		ADCS    mod, den, mod, LSL #1
 		SUBCC   mod, mod ,den
