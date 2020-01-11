@@ -1,0 +1,78 @@
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+	.global	draw_triangle_solid
+draw_triangle_solid:
+	x1_f:r0
+	y1_f:r1
+	x2_f:r2
+	y2_f:r3
+	@ on stack: x3_f, y3_f, color
+
+	PUSH	{r4-r11,lr}		@ 36 bytes pushed
+
+	@ clear room for scratch registers
+	MOV		x1_f:r4, r0
+	MOV		y1_f:r5, r1
+	MOV		x2_f:r6, r2
+	MOV		y2_f:r7, r3
+
+	@LDR		x3_f:r4, [sp, #(0+36)]
+	@LDR		y3_f:r5, [sp, #(4+36)]
+	@LDR		color:r6, [sp, #(8+36)]
+
+	@ TODO rotate points so 1 is on top (2 to the left of 3)
+
+	@ left/right (min/max)
+	MOV		lx_f:r8, x1_f
+	MOV		rx_f:r9, x1_f
+
+	@ calc left slope
+
+	SUB		num:r0, x2_f, x1_f
+	SUB		den:r1, y2_f, y1_f
+	LSL		num, #8
+	BL		divide
+	MOV		dlx_f:r10, num
+
+	@ load the other point and also compare y values
+	LDR		y3_f:r6, [sp, #(4+36)]
+	SUB		den, y3_f, y1_f			@ (denominator)
+	CMP		y3_f, y2_f
+	MOVGT	mid_y:r7, mid_y, ASR #8	@ (was y2_f)
+	MOVLE	mid_y, y3_f, ASR #8
+	LDR		x3_f:r6, [sp, #(0+36)]
+	@ calc right slope
+	SUB		num, x3_f, x1_f		@ (numerator)
+	LSL		num, #8
+	BL		divide
+	MOV		drx_f:r11, num
+
+	MOV		row:r4, y1_f, ASR #8
+	@ multiply by 240
+	RSB		row, row, LSL #4		@ row *= 15
+	LSL		row, #4
+	ADD		row, #0x06000000
+	@ ... and mid_y
+	RSB		mid_y, mid_y, LSL #4
+	LSL		mid_y, #4
+	ADD		mid_y, #0x06000000
+
+	LDR		color:r3, [sp, #(8+36)]
+	@ TODO skip this loop
+top_half_loop:
+	MOV		xstart:r0, lx_f, ASR #8
+	MOV		xend:r1, rx_f, ASR #8
+	MOV		row_tmp:r2, row
+	BL		draw_span_solid
+	ADD		lx_f, dlx_f
+	ADD		rx_f, drx_f
+	ADD		row, #240
+	CMP		row, mid_y
+	BLT		top_half_loop
+
+	@ TODO bottom half
+
+	POP		{r4-r11,lr}
+	BX		lr
