@@ -31,39 +31,26 @@ main:
 	LDR		color, =0x03E0			@ green
 	STRH	color, [mem_palette, #4]
 
-	MOV		xstart_store:r7, #0
-	LDR		draw_span_solid_fn:r4, =draw_span_solid
+	LDR		draw_triangle_solid_fn:r7, =draw_triangle_solid
 loop:
     LDR     cpuset_src:r0, =c_pal_green
     LDR     cpuset_dst:r1, =0x06000000
     LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
     SWI     0x0C    @ CpuFastSet
 
-	LDR		row_store:r6, =0x06000000		@ row 30
-	LDR		color:r3, =0x01010101
-	MOV		count:r5, #160
-for_row:
-	@ reset timer (for testing speed)
-    LDR     reg_tm0cnt_h:r0, =0x04000102
-    MOV     timer0cnt:r1, #0
-    STRH    timer0cnt, [reg_tm0cnt_h]
-    MOV     timer0cnt:r1, #(1<<7)
-    STRH    timer0cnt, [reg_tm0cnt_h]
-
-	MOV		xstart:r0, xstart_store
-	ADD		xend:r1, xstart, count
-	MOV		row:r2, row_store
-	BL		draw_span_solid_thumb
-	ADD		row_store, #240
-	SUB		count, #1
-	BNE		for_row
+	.rept	32
+	LDR		r0, =point1
+	LDR		r1, =point2
+	LDR		r2, =point3
+	LDR		r3, =0x01010101
+	BL		draw_triangle_solid_thumb
+	.endr
 
 	SWI		0x05		@ VBlankIntrWait
-	ADD		xstart_store, #1
 	B		loop
 
-draw_span_solid_thumb:
-	BX		draw_span_solid_fn
+draw_triangle_solid_thumb:
+	BX		draw_triangle_solid_fn
 
 
 	.align	2
@@ -83,3 +70,15 @@ intr_handle:
     STRH    irq, [reg_ifbios]	@ bios
     BX      lr
 
+
+	.align	2
+
+point1:
+	.word	(30<<8)
+	.word	(20<<8)
+point2:
+	.word	(30<<8)
+	.word	(84<<8)
+point3:
+	.word	(94<<8)
+	.word	(84<<8)
