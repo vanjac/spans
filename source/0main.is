@@ -38,14 +38,20 @@ loop:
     LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
     SWI     0x0C    @ CpuFastSet
 
-	.rept	32
-	LDR		r0, =point1
-	LDR		r1, =point2
-	LDR		r2, =point3
+	LDR		point:r4, =transformed_points
+
+	.rept	2
+	MOV		r0, point
+	ADD		point, #8
+	MOV		r1, point
+	ADD		point, #8
+	MOV		r2, point
+	ADD		point, #8
 	LDR		r3, =0x01010101
 	BL		draw_triangle_solid_thumb
 	.endr
 
+	NOP
 	SWI		0x05		@ VBlankIntrWait
 	B		loop
 
@@ -69,16 +75,3 @@ intr_handle:
     LDR     reg_ifbios:r0, =0x03007FF8
     STRH    irq, [reg_ifbios]	@ bios
     BX      lr
-
-
-	.align	2
-
-point1:
-	.word	(30<<8)
-	.word	(20<<8)
-point2:
-	.word	(30<<8)
-	.word	(84<<8)
-point3:
-	.word	(94<<8)
-	.word	(84<<8)

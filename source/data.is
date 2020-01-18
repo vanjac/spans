@@ -1,0 +1,19 @@
+    .section    .iwram
+    .align  2
+
+points_3d:
+    .word   (-1<<8);    .word   (-1<<8);    .word   (2<<8)
+    .word   (-1<<8);    .word   (1<<8);     .word   (2<<8)
+    .word   (1<<8);     .word   0;          .word   (2<<8)
+
+    .global transformed_points
+transformed_points:
+    .word	(30<<8);    .word	(20<<8)
+	.word	(46<<8);    .word	(36<<8)
+	.word	(46<<8);    .word	(20<<8)
+
+    .word	(30<<8);    .word	(20<<8)
+	.word	(30<<8);    .word	(36<<8)
+	.word	(46<<8);    .word	(36<<8)
+
+
