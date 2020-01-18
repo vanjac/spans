@@ -45,7 +45,9 @@ draw_triangle_solid:
 
 	@ compare y2 and y3 to find mid y and end y
 
-	SUB		den, y2_f, y3_f
+	SUBS	den, y2_f, y3_f
+	MOVGT	end_y:r7, y2_f
+	MOVLE	end_y, y3_f
 	MOVGT	y2_f, y3_f
 	mid_y:r9		@ was y2_f
 	@ convert to vram pointer
@@ -59,22 +61,27 @@ draw_triangle_solid:
 	MOV		num, xdiff
 	LSL		num, #8
 	BL		divide
-	MOV		bottom_slope:r6, num
+	MOV		bottom_slope_f:r6, num
 
 	row:r8		@ was y1_f
+	@ convert to vram pointer
 	ASR		row, #8					@ to int
-	@ multiply by 240
 	RSB		row, row, LSL #4		@ row *= 15
 	LSL		row, #4
 	ADD		row, #0x06000000
+	@ ... and end_y
+	ASR		end_y, #8
+	RSB		end_y, end_y, LSL #4
+	LSL		end_y, #4
+	ADD		end_y, #0x06000000
 
 	lx_f:r4		@ was x1_f
 	MOV		rx_f:r5, lx_f
 
 	@ r4: lx_f
 	@ r5: rx_f
-	@ r6: bottom_slope
-	@ r7:
+	@ r6: bottom_slope_f
+	@ r7: end_y
 	@ r8: row
 	@ r9: mid_y * 2 + L/R flag
 	@ r10:dlx_f
@@ -93,7 +100,20 @@ top_half_loop:
 	CMP		row, mid_y, LSR #1
 	BLT		top_half_loop
 
-	@ TODO bottom half
+	TST		mid_y, #1
+	MOVNE	drx_f, bottom_slope_f
+	MOVEQ	dlx_f, bottom_slope_f
+
+bottom_half_loop:	@ copy of above
+	MOV		xstart, lx_f, ASR #8
+	MOV		xend, rx_f, ASR #8
+	MOV		row_tmp:r2, row
+	BL		draw_span_solid
+	ADD		lx_f, dlx_f
+	ADD		rx_f, drx_f
+	ADD		row, #240
+	CMP		row, end_y
+	BLT		bottom_half_loop
 
 	POP		{r4-r11,lr}
 	BX		lr
