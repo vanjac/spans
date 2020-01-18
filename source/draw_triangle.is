@@ -101,7 +101,9 @@ end_point_rotate:
 	@ r11:drx_f
 
 	LDR		color:r3, [sp, #4]
-	@ TODO skip this loop
+	@ skip the loop?
+	CMP		row, mid_y, LSR #1
+	BGE		end_top_half
 top_half_loop:
 	MOV		xstart:r0, lx_f, ASR #8
 	MOV		xend:r1, rx_f, ASR #8
@@ -112,6 +114,7 @@ top_half_loop:
 	ADD		row, #240
 	CMP		row, mid_y, LSR #1
 	BLT		top_half_loop
+end_top_half:
 
 	TST		mid_y, #1
 	MOVNE	drx_f, bottom_slope_f
@@ -127,6 +130,9 @@ top_half_loop:
 	LSL		end_y, #4
 	ADD		end_y, #0x06000000
 
+	@ skip the loop?
+	CMP		row, end_y
+	BGE		end_bottom_half
 bottom_half_loop:	@ copy of above
 	MOV		xstart, lx_f, ASR #8
 	MOV		xend, rx_f, ASR #8
@@ -137,6 +143,7 @@ bottom_half_loop:	@ copy of above
 	ADD		row, #240
 	CMP		row, end_y
 	BLT		bottom_half_loop
+end_bottom_half:
 
 	POP		{r4-r11,lr}
 	BX		lr
