@@ -31,6 +31,7 @@ main:
 	LDR		color, =0x03E0			@ green
 	STRH	color, [mem_palette, #4]
 
+	MOV		theta:r5, #0
 	LDR		transform_points_fn:r6, = transform_points
 	LDR		draw_triangle_solid_fn:r7, =draw_triangle_solid
 loop:
@@ -39,11 +40,13 @@ loop:
     LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
     SWI     0x0C    @ CpuFastSet
 
+	MOV		theta_tmp:r0, theta
 	BL		transform_points_thumb
+	ADD		theta, #1
 
 	LDR		point:r4, =transformed_points
 
-	.rept	1
+	.rept	2
 	MOV		r0, point
 	ADD		point, #8
 	MOV		r1, point
