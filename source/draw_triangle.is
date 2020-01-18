@@ -4,19 +4,36 @@
 	.arm
 	.global	draw_triangle_solid
 draw_triangle_solid:
-	point1:r0	@ pointer to vec2
-	point2:r1
-	point3:r2
+	pointa:r0	@ pointer to vec2
+	pointb:r1
+	pointc:r2
 	color:r3
 
 	PUSH	{r3-r11,lr}		@ color at top of stack
 
-	@ TODO rotate points so 1 is on top (2 to the left of 3)
-
-	@ clear room for scratch registers
-	MOV		point1:r4, r0
-	MOV		point2:r5, r1
-	MOV		point3:r6, r2
+	@ rotate points so 1 is on top (2 to the left of 3)
+	LDR		ay:r7, [pointa, #4]
+	LDR		by:r10, [pointb, #4]
+	LDR		cy:r11, [pointc, #4]
+	point1:r4
+	point2:r5
+	point3:r6
+	CMP		ay, by
+	BGE		a_ge_b
+	CMP		ay, cy
+	MOVLT	point1, pointa
+	MOVLT	point2, pointb
+	MOVLT	point3, pointc
+	B		end_point_rotate
+a_ge_b:
+	CMP		by, cy
+	MOVLT	point1, pointb
+	MOVLT	point2, pointc
+	MOVLT	point3, pointa
+end_point_rotate:
+	MOVGE	point1, pointc
+	MOVGE	point2, pointa
+	MOVGE	point3, pointb
 
 	@ left/right (min/max)
 	LDMIA	point1, {point1, y1_f:r8}
