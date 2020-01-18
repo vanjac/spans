@@ -66,7 +66,7 @@ end_point_rotate:
 	PUSHLE	{y3_f}
 	MOVGT	y2_f, y3_f
 	mid_y:r9		@ was y2_f
-	SUBLE	x2_f, xdiff		@ = x3
+	SUBGT	x2_f, xdiff		@ = x3
 	bottom_x_f:r7			@ was x2_f
 	@ convert to vram pointer
 	ASR		mid_y, #8				@ to int
