@@ -41,11 +41,10 @@ end_point_rotate:
 
 	@ calc left slope = (x2 - x1) / (y2 - y1)
 
-	LDMIA	point2, {point2, y2_f:r9}
-	xdiff:r5	@ was point2
-	SUB		num:r0, xdiff, x1_f	@ x2 - x1
+	LDMIA	point2, {x2_f:r7, y2_f:r9}
+	SUB		num:r0, x2_f, x1_f		@ x2 - x1
 	SUB		den:r1, y2_f, y1_f
-	LSL		num, #8				@ 24.8 fixed point
+	LSL		num, #8					@ 24.8 fixed point
 	BL		divide
 	MOV		dlx_f:r10, num
 
@@ -53,20 +52,22 @@ end_point_rotate:
 
 	LDMIA	point3, {num, point3}
 	y3_f:r6		@ was point3
-	SUB		xdiff, num			@ x2 - x3
-	SUB		num, x1_f			@ x3 - x1
+	SUB		xdiff:r5, x2_f, num		@ x2 - x3
+	SUB		num, x1_f				@ x3 - x1
 	SUB		den, y3_f, y1_f
-	LSL		num, #8				@ 24.8 fixed point
+	LSL		num, #8					@ 24.8 fixed point
 	BL		divide
 	MOV		drx_f:r11, num
 
 	@ compare y2 and y3 to find mid y and end y
 
 	SUBS	den, y2_f, y3_f
-	MOVGT	end_y:r7, y2_f
-	MOVLE	end_y, y3_f
+	PUSHGT	{y2_f}			@ end y
+	PUSHLE	{y3_f}
 	MOVGT	y2_f, y3_f
 	mid_y:r9		@ was y2_f
+	SUBLE	x2_f, xdiff		@ = x3
+	bottom_x_f:r7			@ was x2_f
 	@ convert to vram pointer
 	ASR		mid_y, #8				@ to int
 	RSB		mid_y, mid_y, LSL #4	@ row *= 15
@@ -86,11 +87,6 @@ end_point_rotate:
 	RSB		row, row, LSL #4		@ row *= 15
 	LSL		row, #4
 	ADD		row, #0x06000000
-	@ ... and end_y
-	ASR		end_y, #8
-	RSB		end_y, end_y, LSL #4
-	LSL		end_y, #4
-	ADD		end_y, #0x06000000
 
 	lx_f:r4		@ was x1_f
 	MOV		rx_f:r5, lx_f
@@ -98,13 +94,13 @@ end_point_rotate:
 	@ r4: lx_f
 	@ r5: rx_f
 	@ r6: bottom_slope_f
-	@ r7: end_y
+	@ r7: bottom_x_f
 	@ r8: row
 	@ r9: mid_y * 2 + L/R flag
 	@ r10:dlx_f
 	@ r11:drx_f
 
-	POP		{color:r3}
+	LDR		color:r3, [sp, #4]
 	@ TODO skip this loop
 top_half_loop:
 	MOV		xstart:r0, lx_f, ASR #8
@@ -120,6 +116,16 @@ top_half_loop:
 	TST		mid_y, #1
 	MOVNE	drx_f, bottom_slope_f
 	MOVEQ	dlx_f, bottom_slope_f
+	MOVNE	rx_f, bottom_x_f
+	MOVEQ	lx_f, bottom_x_f
+
+	POP		{end_y:r9}
+	ADD		sp, #4		@ pop color
+	@ convert to vram pointer
+	ASR		end_y, #8
+	RSB		end_y, end_y, LSL #4
+	LSL		end_y, #4
+	ADD		end_y, #0x06000000
 
 bottom_half_loop:	@ copy of above
 	MOV		xstart, lx_f, ASR #8
