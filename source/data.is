@@ -1,6 +1,7 @@
     .section    .iwram
     .align  2
 
+    .global points_3d
 points_3d:
     .word   (-1<<8);    .word   (-1<<8);    .word   (2<<8)
     .word   (-1<<8);    .word   (1<<8);     .word   (2<<8)

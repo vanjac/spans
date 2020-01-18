@@ -31,6 +31,7 @@ main:
 	LDR		color, =0x03E0			@ green
 	STRH	color, [mem_palette, #4]
 
+	LDR		transform_points_fn:r6, = transform_points
 	LDR		draw_triangle_solid_fn:r7, =draw_triangle_solid
 loop:
     LDR     cpuset_src:r0, =c_pal_green
@@ -38,9 +39,11 @@ loop:
     LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
     SWI     0x0C    @ CpuFastSet
 
+	BL		transform_points_thumb
+
 	LDR		point:r4, =transformed_points
 
-	.rept	2
+	.rept	1
 	MOV		r0, point
 	ADD		point, #8
 	MOV		r1, point
@@ -55,9 +58,11 @@ loop:
 	SWI		0x05		@ VBlankIntrWait
 	B		loop
 
+transform_points_thumb:
+	BX		transform_points_fn
+
 draw_triangle_solid_thumb:
 	BX		draw_triangle_solid_fn
-
 
 	.align	2
 c_pal_green:
