@@ -45,26 +45,35 @@ draw_triangle_solid:
 
 	@ compare y2 and y3 to find mid y and end y
 
-	CMP		y3_f, y2_f
+	CMP		y2_f, y3_f
 	MOVGT	y2_f, y3_f
 	mid_y:r5		@ was y2_f
-	next_point:r6	@ was y3_f
-	MRS		next_point, CPSR
+	@ convert to vram pointer
+	ASR		mid_y, #8				@ to int
+	RSB		mid_y, mid_y, LSL #4	@ row *= 15
+	LSL		mid_y, #5				@ multiplied by 480
+	ADD		mid_y, #0x0C000000		@ shifted left 1
+	@ also use to store L/R flag
+	ADDGT	mid_y, #1
 
 	row:r8		@ was y1_f
-	ASR		row, #8
-	ASR		mid_y, #8
+	ASR		row, #8					@ to int
 	@ multiply by 240
 	RSB		row, row, LSL #4		@ row *= 15
 	LSL		row, #4
 	ADD		row, #0x06000000
-	@ ... and mid_y
-	RSB		mid_y, mid_y, LSL #4
-	LSL		mid_y, #4
-	ADD		mid_y, #0x06000000
 
 	lx_f:r4		@ was x1_f
 	MOV		rx_f:r9, lx_f
+
+	@ r4: lx_f
+	@ r5: mid_y * 2 + L/R flag
+	@ r6:
+	@ r7: color
+	@ r8: row
+	@ r9: rx_f
+	@ r10:dlx_f
+	@ r11:drx_f
 
 	MOV		span_color:r3, color
 	@ TODO skip this loop
@@ -76,7 +85,7 @@ top_half_loop:
 	ADD		lx_f, dlx_f
 	ADD		rx_f, drx_f
 	ADD		row, #240
-	CMP		row, mid_y
+	CMP		row, mid_y, LSR #1
 	BLT		top_half_loop
 
 	@ TODO bottom half
