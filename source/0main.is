@@ -43,84 +43,13 @@ main:
 	LDR     color, =0x6B5F
 	STRH	color, [mem_palette, #16]
 
-	MOV		theta:r5, #0
-	LDR		draw_triangle_solid_fn:r7, =draw_triangle_solid
-
 loop:
-	BL		draw_frame
+	LDR		r0, =game_frame
+	BL		arm_fn_r0
 	B		loop
 
-frame1:
-	LDR		framebuffer:r0, =0x0600A000
-	B		frameswap_contd
-
-draw_frame:
-	PUSH	{lr}
-
-	LDR		reg_dispcnt:r1, =0x04000000
-	LDRH	dispcnt_val:r3, [reg_dispcnt]
-	MOV		bit_test:r2, #(1<<4)
-	TST		dispcnt_val, bit_test
-	BNE		frame1
-	LDR		framebuffer:r0, =0x06000000		@ frame0
-frameswap_contd:
-	EOR		dispcnt_val, bit_test
-	STRH	dispcnt_val, [reg_dispcnt]
-
-	PUSH	{framebuffer}	@ to be used by triangle loop
-
-	MOV		clear_color:r1, #0x00000000
-	LDR		draw_cls_fn:r3, =draw_cls
-    BL		draw_cls_thumb
-
-	MOV		theta_tmp:r0, theta
-	LDR		transform_points_fn:r6, =transform_points
-	BL		transform_points_thumb
-	ADD		theta, #1
-
-	LDR		tri_i:r4, =triangles
-
-triangle_loop:
-	LDR		color:r6, =0x01010101
-	.rept	8
-		MOV		r0, tri_i
-		LDR		r0, [r0]
-		CMP		r0, #0
-		BEQ		end_triangle_loop
-		ADD		tri_i, #4
-
-		MOV		r1, tri_i
-		LDR		r1, [r1]
-		ADD		tri_i, #4
-
-		MOV		r2, tri_i
-		LDR		r2, [r2]
-		ADD		tri_i, #4
-
-		MOV		r3, color
-		LDR		color:r6, =0x01010101
-		ADD		color, r3
-		BL		draw_triangle_solid_thumb
-	.endr
-	B		triangle_loop
-end_triangle_loop:
-	ADD		sp, #4	@ pop framebuffer
-
-	POP		{pc}
-
-draw_cls_thumb:
-	BX		draw_cls_fn:r3
-
-transform_points_thumb:
-	BX		transform_points_fn:r6
-
-draw_triangle_solid_thumb:
-	BX		draw_triangle_solid_fn
-
-	.align	2
-c_pal_bg:
-	.word	0x00000000
-
+arm_fn_r0:
+	BX		r0
 
     .section    .iwram, "ax", %progbits
     .align  2

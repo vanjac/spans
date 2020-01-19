@@ -1,0 +1,51 @@
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+
+
+theta:
+	.word	0
+
+	.global game_frame
+game_frame:
+	PUSH	{r4-r6, lr}
+
+	MOV		reg_dispcnt:r1, #0x04000000
+	LDRH	dispcnt_val:r3, [reg_dispcnt]
+	TST		dispcnt_val, #(1<<4)
+	LDRNE	framebuffer:r0, =0x0600A000
+	MOVEQ	framebuffer:r0, #0x06000000
+	EOR		dispcnt_val, #(1<<4)
+	STRH	dispcnt_val, [reg_dispcnt]
+
+	PUSH	{framebuffer}	@ to be used by triangle loop
+
+	MOV		clear_color:r1, #0x00000000
+    BL		draw_cls
+
+	LDR		theta_val:r0, theta
+	ADD		theta_val, #1
+	STR		theta_val, theta
+	BL		transform_points
+
+	LDR		tri_i:r4, =triangles
+
+	LDR		colorinc:r6, =0x01010101
+triangle_loop:
+	MOV		color:r5, colorinc
+	.rept	8
+		LDMIA	tri_i!, {r0, r1, r2}
+		CMP		r0, #0
+		BEQ		end_triangle_loop
+
+		MOV		r3, color
+		ADD		color, colorinc
+		BL		draw_triangle_solid
+	.endr
+	B		triangle_loop
+end_triangle_loop:
+	ADD		sp, #4	@ pop framebuffer
+
+	POP		{r4-r6, lr}
+	BX		lr
