@@ -46,19 +46,28 @@ loop:
 
 	LDR		tri_i:r4, =triangles
 
+
+triangle_loop:
 	.rept	8
-	MOV		r0, tri_i
-	LDR		r0, [r0]
-	ADD		tri_i, #4
-	MOV		r1, tri_i
-	LDR		r1, [r1]
-	ADD		tri_i, #4
-	MOV		r2, tri_i
-	LDR		r2, [r2]
-	ADD		tri_i, #4
-	LDR		r3, =0x01010101
-	BL		draw_triangle_solid_thumb
+		MOV		r0, tri_i
+		LDR		r0, [r0]
+		CMP		r0, #0
+		BEQ		end_triangle_loop
+		ADD		tri_i, #4
+
+		MOV		r1, tri_i
+		LDR		r1, [r1]
+		ADD		tri_i, #4
+
+		MOV		r2, tri_i
+		LDR		r2, [r2]
+		ADD		tri_i, #4
+
+		LDR		r3, =0x01010101
+		BL		draw_triangle_solid_thumb
 	.endr
+	B		triangle_loop
+end_triangle_loop:
 
 	NOP
 	SWI		0x05		@ VBlankIntrWait

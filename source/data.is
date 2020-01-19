@@ -38,3 +38,4 @@ triangles:
 	.word	p7;		.word	p5;		.word	p6;
 	.word	p1;		.word	p3;		.word	p4;
 	.word	p5;		.word	p1;		.word	p2;
+	.word	0
