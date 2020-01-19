@@ -36,7 +36,7 @@ transform_loop:
 	MLA		pointx, pointz, sint, pointx
 	ASR		pointx, #8
 	MOV		pointz, rotpz, ASR #8
-	ADD		pointz, #(4<<8)		@ z offset
+	ADD		pointz, #(3<<8)		@ z offset
 
 	MOV		num:r0, pointx, LSL #15
 	MOV		den:r1, pointz
