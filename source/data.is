@@ -8,10 +8,10 @@ num_points:
 
 	.global	points_3d
 points_3d:
-	.word	(-1<<8);	.word	(-1<<8);	.word	(1<<8)
-	.word	(-1<<8);	.word	(1<<8);		.word	(1<<8)
-	.word	(1<<8);		.word	(1<<8);		.word	(1<<8)
-	.word	(1<<8);		.word	(-1<<8);	.word	(1<<8)
+	.word	(-1<<8);	.word	(-1<<8);	.word	(-1<<8)
+	.word	(-1<<8);	.word	(1<<8);		.word	(-1<<8)
+	.word	(1<<8);		.word	(1<<8);		.word	(-1<<8)
+	.word	(1<<8);		.word	(-1<<8);	.word	(-1<<8)
 
 	.global	transformed_points
 transformed_points:
