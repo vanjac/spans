@@ -46,7 +46,7 @@ loop:
 
 	LDR		tri_i:r4, =triangles
 
-	.rept	2
+	.rept	8
 	MOV		r0, tri_i
 	LDR		r0, [r0]
 	ADD		tri_i, #4

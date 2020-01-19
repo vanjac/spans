@@ -1,0 +1,6 @@
+-Y up
+Z forward
+Don't write normals
+Don't include UVs
+Don't write materials
+Triangulate faces

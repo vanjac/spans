@@ -1,26 +1,40 @@
 	.section	.iwram
 	.align	2
 
-	.equ	c_num_points, 4
+	.equ	c_num_points, 8
 	.global	num_points
 num_points:
 	.word	(c_num_points)
 
 	.global	points_3d
 points_3d:
+	.word	(1<<8);		.word	(-1<<8);	.word	(1<<8)
+	.word	(1<<8);		.word	(1<<8);		.word	(1<<8)
+	.word	(1<<8);		.word	(-1<<8);	.word	(-1<<8)
+	.word	(1<<8);		.word	(1<<8);		.word	(-1<<8)
+	.word	(-1<<8);	.word	(-1<<8);	.word	(1<<8)
+	.word	(-1<<8);	.word	(1<<8);		.word	(1<<8)
 	.word	(-1<<8);	.word	(-1<<8);	.word	(-1<<8)
 	.word	(-1<<8);	.word	(1<<8);		.word	(-1<<8)
-	.word	(1<<8);		.word	(1<<8);		.word	(-1<<8)
-	.word	(1<<8);		.word	(-1<<8);	.word	(-1<<8)
 
 	.global	transformed_points
 transformed_points:
-p0:		.space	8
 p1:		.space	8
 p2:		.space	8
 p3:		.space	8
+p4:		.space	8
+p5:		.space	8
+p6:		.space	8
+p7:		.space	8
+p8:		.space	8
 
 	.global	triangles
 triangles:
-	.word	p0;		.word	p1;		.word	p2;
-	.word	p0;		.word	p2;		.word	p3;
+	.word	p3;		.word	p8;		.word	p4;
+	.word	p7;		.word	p6;		.word	p8;
+	.word	p1;		.word	p4;		.word	p2;
+	.word	p5;		.word	p2;		.word	p6;
+	.word	p3;		.word	p7;		.word	p8;
+	.word	p7;		.word	p5;		.word	p6;
+	.word	p1;		.word	p3;		.word	p4;
+	.word	p5;		.word	p1;		.word	p2;
