@@ -62,13 +62,20 @@ end_point_rotate:
 	@ compare y2 and y3 to find mid y and end y
 
 	SUBS	den, y2_f, y3_f
-	PUSHGT	{y2_f}			@ end y
-	PUSHLE	{y3_f}
+	MOVGT	end_y:r2, y2_f
+	MOVLE	end_y, y3_f
 	MOVGT	y2_f, y3_f
 	mid_y:r9		@ was y2_f
 	SUBGT	x2_f, xdiff		@ = x3
 	bottom_x_f:r7			@ was x2_f
-	@ convert to vram pointer
+
+	@ convert to vram pointers
+	ASR		end_y, #8
+	RSB		end_y, end_y, LSL #4
+	LSL		end_y, #4
+	ADD		end_y, #0x06000000
+	PUSH	{end_y}
+
 	ASR		mid_y, #8				@ to int
 	RSB		mid_y, mid_y, LSL #4	@ row *= 15
 	LSL		mid_y, #5				@ multiplied by 480
@@ -76,17 +83,16 @@ end_point_rotate:
 	@ also use to store L/R flag
 	ADDGT	mid_y, #1
 
-	MOV		num, xdiff
-	LSL		num, #8
-	BL		divide
-	MOV		bottom_slope_f:r6, num
-
 	row:r8		@ was y1_f
-	@ convert to vram pointer
 	ASR		row, #8					@ to int
 	RSB		row, row, LSL #4		@ row *= 15
 	LSL		row, #4
 	ADD		row, #0x06000000
+
+	MOV		num, xdiff
+	LSL		num, #8
+	BL		divide
+	MOV		bottom_slope_f:r6, num
 
 	lx_f:r4		@ was x1_f
 	MOV		rx_f:r5, lx_f
@@ -124,11 +130,6 @@ end_top_half:
 
 	POP		{end_y:r9}
 	ADD		sp, #4		@ pop color
-	@ convert to vram pointer
-	ASR		end_y, #8
-	RSB		end_y, end_y, LSL #4
-	LSL		end_y, #4
-	ADD		end_y, #0x06000000
 
 	@ skip the loop?
 	CMP		row, end_y
