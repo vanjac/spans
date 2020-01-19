@@ -1,0 +1,33 @@
+	.section	.iwram, "ax", %progbits
+	.align	2
+	.code	32
+	.arm
+	.global draw_cls
+draw_cls:
+	framebuffer:r0
+	color:r1
+	PUSH	{r4-r10}
+	MOV		r2, color
+	MOV		r3, color
+	MOV		r4, color
+	MOV		r5, color
+	MOV		r6, color
+	MOV		r7, color
+	MOV		r8, color
+	MOV		r9, color
+	MOV		r10, color
+
+	@ framebuffer is 240 * 160 = 38400 bytes
+	@ each STMIA fills 10 * 4 = 40 bytes
+	@ need 38400 / 40 = 960 STMIAs
+	@ 800 = 16 * 60
+	MOV		count:r12, #60
+cls_loop:
+	.rept 16
+		STMIA	framebuffer!, {r1-r10}
+	.endr
+	SUBS	count, #1
+	BNE		cls_loop
+
+	POP		{r4-r10}
+	BX		lr

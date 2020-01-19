@@ -1,10 +1,5 @@
 	.align  2
 	.code   16
-
-frame1:
-	LDR		framebuffer:r1, =0x0600A000
-	B		frameswap_contd
-
 	.thumb_func
 	.global	main
 	.type   main, %function
@@ -55,24 +50,28 @@ loop:
 	BL		draw_frame
 	B		loop
 
+frame1:
+	LDR		framebuffer:r0, =0x0600A000
+	B		frameswap_contd
+
 draw_frame:
 	PUSH	{lr}
 
-	LDR		reg_dispcnt:r0, =0x04000000
+	LDR		reg_dispcnt:r1, =0x04000000
 	LDRH	dispcnt_val:r3, [reg_dispcnt]
 	MOV		bit_test:r2, #(1<<4)
 	TST		dispcnt_val, bit_test
 	BNE		frame1
-	LDR		framebuffer:r1, =0x06000000		@ frame0
+	LDR		framebuffer:r0, =0x06000000		@ frame0
 frameswap_contd:
 	EOR		dispcnt_val, bit_test
 	STRH	dispcnt_val, [reg_dispcnt]
 
 	PUSH	{framebuffer}	@ to be used by triangle loop
 
-    LDR     cpuset_src:r0, =c_pal_bg
-    LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
-    SWI     0x0C    @ CpuFastSet
+	MOV		clear_color:r1, #0x00000000
+	LDR		draw_cls_fn:r3, =draw_cls
+    BL		draw_cls_thumb
 
 	MOV		theta_tmp:r0, theta
 	LDR		transform_points_fn:r6, =transform_points
@@ -108,6 +107,9 @@ end_triangle_loop:
 	ADD		sp, #4	@ pop framebuffer
 
 	POP		{pc}
+
+draw_cls_thumb:
+	BX		draw_cls_fn:r3
 
 transform_points_thumb:
 	BX		transform_points_fn:r6
