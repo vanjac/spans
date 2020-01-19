@@ -44,15 +44,18 @@ loop:
 	BL		transform_points_thumb
 	ADD		theta, #1
 
-	LDR		point:r4, =transformed_points
+	LDR		tri_i:r4, =triangles
 
 	.rept	2
-	MOV		r0, point
-	ADD		point, #8
-	MOV		r1, point
-	ADD		point, #8
-	MOV		r2, point
-	ADD		point, #8
+	MOV		r0, tri_i
+	LDR		r0, [r0]
+	ADD		tri_i, #4
+	MOV		r1, tri_i
+	LDR		r1, [r1]
+	ADD		tri_i, #4
+	MOV		r2, tri_i
+	LDR		r2, [r2]
+	ADD		tri_i, #4
 	LDR		r3, =0x01010101
 	BL		draw_triangle_solid_thumb
 	.endr

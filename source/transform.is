@@ -23,7 +23,8 @@ transform_points:
 
 	LDR		pt3d:r4, =points_3d
 	LDR		pt2d:r5, =transformed_points
-	MOV		num_points:r6, #6
+	LDR		count:r6, =num_points
+	LDR		count, [count]
 
 transform_loop:
 	LDMIA	pt3d!, {pointx:r7, pointy:r8, pointz:r9}
@@ -50,7 +51,7 @@ transform_loop:
 
 	STMIA	pt2d!, {pointx, pointy}
 
-	SUBS	num_points, #1
+	SUBS	count, #1
 	BNE		transform_loop
 
 	POP		{r4-r11, lr}
