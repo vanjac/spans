@@ -35,8 +35,10 @@ main:
 	LDR		transform_points_fn:r6, = transform_points
 	LDR		draw_triangle_solid_fn:r7, =draw_triangle_solid
 loop:
+	LDR		framebuffer:r1, =0x0600A000
+	PUSH	{framebuffer}	@ to be used by triangle loop
+
     LDR     cpuset_src:r0, =c_pal_green
-    LDR     cpuset_dst:r1, =0x06000000
     LDR     cpuset_len:r2, =((240*160/4) | (1<<24))
     SWI     0x0C    @ CpuFastSet
 
@@ -68,6 +70,7 @@ triangle_loop:
 	.endr
 	B		triangle_loop
 end_triangle_loop:
+	ADD		sp, #4	@ pop framebuffer
 
 	NOP
 	SWI		0x05		@ VBlankIntrWait

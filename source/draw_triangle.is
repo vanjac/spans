@@ -8,8 +8,9 @@ draw_triangle_solid:
 	pointb:r1
 	pointc:r2
 	color:r3
+	@ on stack: frame buffer pointer
 
-	PUSH	{r3-r11,lr}		@ color at top of stack
+	PUSH	{r3-r11,lr}		@ color at top of stack. 40 bytes pushed
 
 	@ rotate points so 1 is on top (2 to the left of 3)
 	LDR		ay:r7, [pointa, #4]
@@ -69,17 +70,19 @@ end_point_rotate:
 	SUBGT	x2_f, xdiff		@ = x3
 	bottom_x_f:r7			@ was x2_f
 
+	LDR		framebuffer:r3, [sp, #40]
+
 	@ convert to vram pointers
 	ASR		end_y, #8
 	RSB		end_y, end_y, LSL #4
 	LSL		end_y, #4
-	ADD		end_y, #0x06000000
+	ADD		end_y, framebuffer
 	PUSH	{end_y}
 
 	ASR		mid_y, #8				@ to int
 	RSB		mid_y, mid_y, LSL #4	@ row *= 15
 	LSL		mid_y, #5				@ multiplied by 480
-	ADD		mid_y, #0x0C000000		@ shifted left 1
+	ADD		mid_y, framebuffer, LSL #1
 	@ also use to store L/R flag
 	ADDGT	mid_y, #1
 
@@ -87,7 +90,7 @@ end_point_rotate:
 	ASR		row, #8					@ to int
 	RSB		row, row, LSL #4		@ row *= 15
 	LSL		row, #4
-	ADD		row, #0x06000000
+	ADD		row, framebuffer
 
 	MOV		num, xdiff
 	LSL		num, #8
