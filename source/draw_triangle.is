@@ -60,31 +60,55 @@ end_point_rotate:
 	BL		divide
 	MOV		drx_f:r11, num
 
-	@ compare y2 and y3 to find mid y and end y
-
+	MOV		num, xdiff, LSL #8
 	SUBS	den, y3_f, y2_f
-	MOVLE	end_y:r2, y2_f
+
+	@ compare y2 and y3 to find mid y and end y
+	ADDLE	x2_f, xdiff		@ = x3
+	mid_x_f:r7				@ was x2_f
+	MOVLE	end_y:r5, y2_f
 	MOVGT	end_y, y3_f
 	MOVLE	y2_f, y3_f
 	mid_y:r9		@ was y2_f
-	ADDLE	x2_f, xdiff		@ = x3
-	bottom_x_f:r7			@ was x2_f
+	@ store L/R flag for later
+	BIC		mid_y, #1
+	ORRLE	mid_y, #1
+
+	BL		divide
+	MOV		bottom_slope_f:r6, num
 
 	LDR		framebuffer:r3, [sp, #40]
 
-	@ convert to vram pointers
+	@ convert to vram pointers, also add subpixel offsets to x values
+
 	ASR		end_y, #8
 	RSB		end_y, end_y, LSL #4
 	LSL		end_y, #4
 	ADD		end_y, framebuffer
 	PUSH	{end_y}
 
+	@ different from y1 subpixel idk??
+	AND		mid_y_subpixel:r1, mid_y, #0xFF		@ fraction part of fixed point
+	RSB		mid_y_subpixel, #0x100
+	MUL		subpixel_offset:r0, mid_y_subpixel, bottom_slope_f
+	ADD		mid_x_f, subpixel_offset, ASR #8
+
+	TST		mid_y, #1				@ retrieve L/R flag from above
 	ASR		mid_y, #8				@ to int
 	RSB		mid_y, mid_y, LSL #4	@ row *= 15
 	LSL		mid_y, #5				@ multiplied by 480
 	ADD		mid_y, framebuffer, LSL #1
 	@ also use to store L/R flag
-	ADDLE	mid_y, #1		@ from SUBS above
+	ADDNE	mid_y, #1		@ from TST
+
+	lx_f:r4		@ was x1_f
+	MOV		rx_f:r5, lx_f
+
+	AND		y1_subpixel:r1, y1_f, #0xFF		@ fraction part of fixed point
+	MUL		subpixel_offset, y1_subpixel, dlx_f
+	SUB		lx_f, subpixel_offset, ASR #8
+	MUL		subpixel_offset, y1_subpixel, drx_f
+	SUB		rx_f, subpixel_offset, ASR #8
 
 	row:r8		@ was y1_f
 	ASR		row, #8					@ to int
@@ -92,18 +116,10 @@ end_point_rotate:
 	LSL		row, #4
 	ADD		row, framebuffer
 
-	MOV		num, xdiff
-	LSL		num, #8
-	BL		divide
-	MOV		bottom_slope_f:r6, num
-
-	lx_f:r4		@ was x1_f
-	MOV		rx_f:r5, lx_f
-
 	@ r4: lx_f
 	@ r5: rx_f
 	@ r6: bottom_slope_f
-	@ r7: bottom_x_f
+	@ r7: mid_x_f
 	@ r8: row
 	@ r9: mid_y * 2 + L/R flag
 	@ r10:dlx_f
@@ -122,14 +138,14 @@ top_half_loop:
 	ADD		rx_f, drx_f
 	ADD		row, #240
 	CMP		row, mid_y, LSR #1
-	BLT		top_half_loop
+	BLE		top_half_loop		@ not LT. subpixels idk??
 end_top_half:
 
 	TST		mid_y, #1
 	MOVNE	drx_f, bottom_slope_f
 	MOVEQ	dlx_f, bottom_slope_f
-	MOVNE	rx_f, bottom_x_f
-	MOVEQ	lx_f, bottom_x_f
+	MOVNE	rx_f, mid_x_f
+	MOVEQ	lx_f, mid_x_f
 
 	POP		{end_y:r9}
 
@@ -145,7 +161,7 @@ bottom_half_loop:	@ copy of above
 	ADD		rx_f, drx_f
 	ADD		row, #240
 	CMP		row, end_y
-	BLT		bottom_half_loop
+	BLE		bottom_half_loop
 end_bottom_half:
 end_draw_triangle:
 
