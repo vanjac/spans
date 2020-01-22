@@ -44,7 +44,7 @@ end_point_rotate:
 
 	LDMIA	point2, {x2_f:r7, y2_f:r9}
 	SUB		num:r0, x2_f, x1_f		@ x2 - x1
-	SUB		den:r1, y2_f, y1_f
+	SUB		den:r1, y2_f, y1_f		@ y2 - y1
 	LSL		num, #8					@ 24.8 fixed point
 	BL		divide
 	MOV		dlx_f:r10, num
@@ -55,13 +55,18 @@ end_point_rotate:
 	y3_f:r6		@ was point3
 	SUB		xdiff:r5, num, x2_f		@ x3 - x2
 	SUB		num, x1_f				@ x3 - x1
-	SUB		den, y3_f, y1_f
+	SUB		den, y3_f, y1_f			@ y3 - y1
+
+	@ cross product to determine winding order
+	SUB		cross1:r2, x2_f, x1_f
+	MUL		cross1, den
+	SUB		cross2:r3, y1_f, y2_f	@ reversed (negative)
+	MLAS	cross1, cross2, num, cross1
+	BGE		end_draw_triangle
+
 	LSL		num, #8					@ 24.8 fixed point
 	BL		divide
 	MOV		drx_f:r11, num
-
-	CMP		drx_f, dlx_f			@ TODO sometimes doesn't work
-	BLE		end_draw_triangle
 
 	MOV		num, xdiff, LSL #8
 	SUBS	den, y3_f, y2_f
