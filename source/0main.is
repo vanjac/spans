@@ -26,21 +26,21 @@ main:
     STRH    vblank_irq, [reg_dispcnt, #4]   @ reg_dispstat
 	
 	LDR     mem_palette:r0, =0x05000000
-	LDR     color:r1, =0x001F
+	LDR     color:r1, =0x5200
 	STRH	color, [mem_palette, #2]
-	LDR     color, =0x031F
+	LDR     color, =0x6F74
 	STRH	color, [mem_palette, #4]
-	LDR     color, =0x03FF
-	STRH	color, [mem_palette, #6]
 	LDR     color, =0x03E0
+	STRH	color, [mem_palette, #6]
+	LDR     color, =0x7C10
 	STRH	color, [mem_palette, #8]
 	LDR     color, =0x7FE0
 	STRH	color, [mem_palette, #10]
-	LDR     color, =0x7C00
+	LDR     color, =0x7C18
 	STRH	color, [mem_palette, #12]
-	LDR     color, =0x7C1F
+	LDR     color, =0x7C00
 	STRH	color, [mem_palette, #14]
-	LDR     color, =0x6B5F
+	LDR     color, =0x701E
 	STRH	color, [mem_palette, #16]
 
 loop:
