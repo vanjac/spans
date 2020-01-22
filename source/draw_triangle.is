@@ -60,6 +60,9 @@ end_point_rotate:
 	BL		divide
 	MOV		drx_f:r11, num
 
+	CMP		drx_f, dlx_f			@ TODO sometimes doesn't work
+	BLE		end_draw_triangle
+
 	MOV		num, xdiff, LSL #8
 	SUBS	den, y3_f, y2_f
 
@@ -87,11 +90,10 @@ end_point_rotate:
 	ADD		end_y, framebuffer
 	PUSH	{end_y}
 
-	@ different from y1 subpixel idk??
 	AND		mid_y_subpixel:r1, mid_y, #0xFF		@ fraction part of fixed point
-	RSB		mid_y_subpixel, #0x100
+	SUB		mid_y_subpixel, #0x100				@ why is this??
 	MUL		subpixel_offset:r0, mid_y_subpixel, bottom_slope_f
-	ADD		mid_x_f, subpixel_offset, ASR #8
+	SUB		mid_x_f, subpixel_offset, ASR #8
 
 	TST		mid_y, #1				@ retrieve L/R flag from above
 	ASR		mid_y, #8				@ to int
@@ -128,7 +130,7 @@ end_point_rotate:
 	LDR		color:r3, [sp, #4]
 	@ skip the loop?
 	CMP		row, mid_y, LSR #1
-	BGE		end_top_half
+	BGT		end_top_half
 top_half_loop:
 	MOV		xstart:r0, lx_f, ASR #8
 	MOV		xend:r1, rx_f, ASR #8
@@ -151,7 +153,7 @@ end_top_half:
 
 	@ skip the loop?
 	CMP		row, end_y
-	BGE		end_bottom_half
+	BGT		end_bottom_half
 bottom_half_loop:	@ copy of above
 	MOV		xstart, lx_f, ASR #8
 	MOV		xend, rx_f, ASR #8
