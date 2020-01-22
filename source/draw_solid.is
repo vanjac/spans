@@ -9,6 +9,10 @@ draw_span_solid:
 	row:r2		@ vram address
 	color:r3
 
+	CMP		xstart, #0
+	MOVLT	xstart, #0
+	CMP		xend, #240
+	MOVGE	xend, #240
 	@ return if length is zero
 	CMP		xstart, xend
 	BXGE	lr
