@@ -44,22 +44,14 @@ end_point_rotate:
 	LDMIA	point1, {point1, y1_f:r8}
 	x1_f:r4		@ was point1
 
-	@ calc left slope = (x2 - x1) / (y2 - y1)
-
 	LDMIA	point2, {x2_f:r7, y2_f:r9}
-	SUB		num:r0, x2_f, x1_f		@ x2 - x1
-	SUB		den:r1, y2_f, y1_f		@ y2 - y1
-	LSL		num, #8					@ 24.8 fixed point
-	BL		divide
-	MOV		dlx_f:r10, num
 
-	@ calc right slope = (x3 - x1) / (y3 - y1)
-
-	LDMIA	point3, {num, point3}
+	LDMIA	point3, {num:r0, point3}
 	y3_f:r6		@ was point3
 	SUB		xdiff:r5, num, x2_f		@ x3 - x2
+
 	SUB		num, x1_f				@ x3 - x1
-	SUB		den, y3_f, y1_f			@ y3 - y1
+	SUB		den:r1, y3_f, y1_f		@ y3 - y1
 
 	@ cross product to determine winding order
 	SUB		cross1:r2, x2_f, x1_f
@@ -68,9 +60,20 @@ end_point_rotate:
 	MLAS	cross1, cross2, num, cross1
 	BGE		end_draw_triangle
 
+	@ calc right slope = (x3 - x1) / (y3 - y1)
+
 	LSL		num, #8					@ 24.8 fixed point
 	BL		divide
 	MOV		drx_f:r11, num
+
+	@ calc left slope = (x2 - x1) / (y2 - y1)
+
+	SUB		num, x2_f, x1_f			@ x2 - x1
+	SUB		den, y2_f, y1_f			@ y2 - y1
+	LSL		num, #8					@ 24.8 fixed point
+	BL		divide
+	MOV		dlx_f:r10, num
+
 
 	MOV		num, xdiff, LSL #8
 	SUBS	den, y3_f, y2_f
