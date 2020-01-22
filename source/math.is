@@ -63,7 +63,10 @@ divide:
 	BX      lr
 
 div0:
-	MOV		num, #0
+	CMP		num, #0
+	MOVEQ	num, #0
+	MOVNE	num, #(1<<23)	@ I don't understand why this works!!
+	MVNMI	num, num		@ but it works!!
 	BX		lr
 
 div1:
