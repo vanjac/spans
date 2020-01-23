@@ -33,12 +33,11 @@ transform_loop:
 	MLA		rotpz, pointx, sint, rotpz
 	RSB		pointz, #0
 	MUL		pointx, pointx, cost
-	MLA		pointx, pointz, sint, pointx
-	ASR		pointx, #8
+	MLA		pointx, pointz, sint, pointx	@ shifted right 8
 	MOV		pointz, rotpz, ASR #8
 	ADD		pointz, #(3<<8)		@ z offset
 
-	MOV		num:r0, pointx, LSL #15
+	MOV		num:r0, pointx, LSL #7			@ already shifted right 8
 	MOV		den:r1, pointz
 	BL		divide
 	ADD		pointx, num, #(120<<8)	@ center x
