@@ -140,14 +140,13 @@ end_point_rotate:
 	@ r11:drx_f
 
 	LDR		color:r3, [sp, #4]
-	@ skip the loop?
-	CMP		row, mid_y, LSR #1
-	BGT		end_top_half
 top_half_loop:
 	xstart:r0
 	xend:r1
 	row_tmp:r2
 	.rept	8
+		CMP		row, mid_y, LSR #1
+		BGT		end_top_half		@ not GE. subpixels idk??
 		MOV		xstart, lx_f, ASR #8
 		MOV		xend, rx_f, ASR #8
 		MOV		row_tmp, row
@@ -155,8 +154,6 @@ top_half_loop:
 		ADD		lx_f, dlx_f
 		ADD		rx_f, drx_f
 		ADD		row, #240
-		CMP		row, mid_y, LSR #1
-		BGT		end_top_half		@ not GE. subpixels idk??
 	.endr
 	B		top_half_loop
 end_top_half:
@@ -169,11 +166,10 @@ end_top_half:
 
 	POP		{end_y:r9}
 
-	@ skip the loop?
-	CMP		row, end_y
-	BGT		end_bottom_half
 bottom_half_loop:	@ copy of above
 	.rept	8
+		CMP		row, end_y
+		BGT		end_bottom_half
 		MOV		xstart, lx_f, ASR #8
 		MOV		xend, rx_f, ASR #8
 		MOV		row_tmp:r2, row
@@ -181,8 +177,6 @@ bottom_half_loop:	@ copy of above
 		ADD		lx_f, dlx_f
 		ADD		rx_f, drx_f
 		ADD		row, #240
-		CMP		row, end_y
-		BGT		end_bottom_half
 	.endr
 	B		bottom_half_loop
 end_bottom_half:
