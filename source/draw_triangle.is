@@ -144,15 +144,21 @@ end_point_rotate:
 	CMP		row, mid_y, LSR #1
 	BGT		end_top_half
 top_half_loop:
-	MOV		xstart:r0, lx_f, ASR #8
-	MOV		xend:r1, rx_f, ASR #8
-	MOV		row_tmp:r2, row
-	BL		draw_span_solid
-	ADD		lx_f, dlx_f
-	ADD		rx_f, drx_f
-	ADD		row, #240
-	CMP		row, mid_y, LSR #1
-	BLE		top_half_loop		@ not LT. subpixels idk??
+	xstart:r0
+	xend:r1
+	row_tmp:r2
+	.rept	8
+		MOV		xstart, lx_f, ASR #8
+		MOV		xend, rx_f, ASR #8
+		MOV		row_tmp, row
+		BL		draw_span_solid
+		ADD		lx_f, dlx_f
+		ADD		rx_f, drx_f
+		ADD		row, #240
+		CMP		row, mid_y, LSR #1
+		BGT		end_top_half		@ not GE. subpixels idk??
+	.endr
+	B		top_half_loop
 end_top_half:
 
 	TST		mid_y, #1
@@ -167,15 +173,18 @@ end_top_half:
 	CMP		row, end_y
 	BGT		end_bottom_half
 bottom_half_loop:	@ copy of above
-	MOV		xstart, lx_f, ASR #8
-	MOV		xend, rx_f, ASR #8
-	MOV		row_tmp:r2, row
-	BL		draw_span_solid
-	ADD		lx_f, dlx_f
-	ADD		rx_f, drx_f
-	ADD		row, #240
-	CMP		row, end_y
-	BLE		bottom_half_loop
+	.rept	8
+		MOV		xstart, lx_f, ASR #8
+		MOV		xend, rx_f, ASR #8
+		MOV		row_tmp:r2, row
+		BL		draw_span_solid
+		ADD		lx_f, dlx_f
+		ADD		rx_f, drx_f
+		ADD		row, #240
+		CMP		row, end_y
+		BGT		end_bottom_half
+	.endr
+	B		bottom_half_loop
 end_bottom_half:
 end_draw_triangle:
 
