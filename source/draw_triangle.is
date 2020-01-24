@@ -46,11 +46,10 @@ end_point_rotate:
 
 	LDMIA	point2, {x2_f:r7, y2_f:r9}
 
-	LDMIA	point3, {num:r0, point3}
+	LDMIA	point3, {x3_f:r5, point3}
 	y3_f:r6		@ was point3
-	SUB		xdiff:r5, num, x2_f		@ x3 - x2
 
-	SUB		num, x1_f				@ x3 - x1
+	SUB		num:r0, x3_f, x1_f		@ x3 - x1
 	SUB		den:r1, y3_f, y1_f		@ y3 - y1
 
 	@ cross product to determine winding order
@@ -75,11 +74,12 @@ end_point_rotate:
 	MOV		dlx_f:r10, num
 
 
-	MOV		num, xdiff, LSL #8
+	SUB		num, x3_f, x2_f
+	LSL 	num, #8
 	SUBS	den, y3_f, y2_f
 
 	@ compare y2 and y3 to find mid y and end y
-	ADDLE	x2_f, xdiff		@ = x3
+	MOVLE	x2_f, x3_f		@ = x3
 	mid_x_f:r7				@ was x2_f
 	MOVLE	end_y:r5, y2_f
 	MOVGT	end_y, y3_f
