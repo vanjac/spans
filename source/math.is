@@ -55,7 +55,7 @@ divide:
 	NOP							@ padding
 	.rept   32
 		ADCS    mod, den, mod, LSL #1
-		SUBCC   mod, mod ,den
+		SUBCC   mod, mod, den
 		ADCS    num, num, num
 	.endr
 	CMP		sign, #0		@ correct quotient sign

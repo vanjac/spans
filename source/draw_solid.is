@@ -7,7 +7,7 @@ draw_span_solid:
 	xstart:r0
 	xend:r1
 	row:r2		@ vram address
-	color:r3
+	color:r3	@ returned unmodified
 
 	CMP		xstart, #0
 	MOVLT	xstart, #0
