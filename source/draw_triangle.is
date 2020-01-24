@@ -7,10 +7,9 @@ draw_triangle_solid:
 	pointa:r0	@ pointer to vec2
 	pointb:r1
 	pointc:r2
-	color:r3
-	@ on stack: frame buffer pointer
+	@ on stack: color, frame buffer pointer
 
-	PUSH	{r3-r11,lr}		@ color at top of stack. 40 bytes pushed
+	PUSH	{r4-r11,lr}		@ 36 bytes pushed
 
 	@ rotate points so 1 is on top (1-2 to the left of 1-3)
 	@ for ties with 1 prefer 1 to the right (for cross product)
@@ -139,7 +138,7 @@ end_point_rotate:
 	@ r10:dlx_f
 	@ r11:drx_f
 
-	LDR		color:r3, [sp, #4]
+	LDR		color:r3, [sp, #40]		@ end_y was pushed earlier
 top_half_loop:
 	xstart:r0
 	xend:r1
@@ -182,5 +181,4 @@ bottom_half_loop:	@ copy of above
 end_bottom_half:
 end_draw_triangle:
 
-	ADD		sp, #4		@ pop color
 	POP		{r4-r11,pc}

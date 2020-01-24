@@ -39,9 +39,10 @@ triangle_loop:
 		CMP		r0, #0
 		BEQ		end_triangle_loop
 
-		MOV		r3, color
+		PUSH	{color}
 		ADD		color, colorinc
 		BL		draw_triangle_solid
+		ADD		sp, #4		@ pop color
 	.endr
 	B		triangle_loop
 end_triangle_loop:
