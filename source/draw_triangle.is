@@ -183,5 +183,4 @@ end_bottom_half:
 end_draw_triangle:
 
 	ADD		sp, #4		@ pop color
-	POP		{r4-r11,lr}
-	BX		lr
+	POP		{r4-r11,pc}
