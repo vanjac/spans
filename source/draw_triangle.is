@@ -72,23 +72,20 @@ end_point_rotate:
 	BL		divide
 	MOV		dlx_f:r10, num
 
-
 	SUB		num, x3_f, x2_f
+	SUB		den, y3_f, y2_f
 	LSL 	num, #8
-	SUBS	den, y3_f, y2_f
+	BL		divide
 
 	@ compare y2 and y3 to find mid y and end y
+	CMP		y3_f, y2_f
 	MOVLE	x2_f, x3_f		@ = x3
 	mid_x_f:r7				@ was x2_f
 	MOVLE	end_y:r5, y2_f
 	MOVGT	end_y, y3_f
 	MOVLE	y2_f, y3_f
 	mid_y:r9		@ was y2_f
-	@ store L/R flag for later
-	BIC		mid_y, #1
-	ORRLE	mid_y, #1
 
-	BL		divide
 	MOV		bottom_slope_f:r6, num
 
 	LDR		framebuffer:r3, [sp, #40]
@@ -106,13 +103,12 @@ end_point_rotate:
 	MUL		subpixel_offset:r0, mid_y_subpixel, bottom_slope_f
 	SUB		mid_x_f, subpixel_offset, ASR #8
 
-	TST		mid_y, #1				@ retrieve L/R flag from above
 	ASR		mid_y, #8				@ to int
 	RSB		mid_y, mid_y, LSL #4	@ row *= 15
 	LSL		mid_y, #5				@ multiplied by 480
 	ADD		mid_y, framebuffer, LSL #1
 	@ also use to store L/R flag
-	ADDNE	mid_y, #1		@ from TST
+	ADDLE	mid_y, #1		@ from CMP way above
 
 	lx_f:r4		@ was x1_f
 	MOV		rx_f:r5, lx_f
