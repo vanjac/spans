@@ -55,8 +55,8 @@ end_point_rotate:
 	SUB		cross1:r2, x2_f, x1_f
 	MUL		cross1, den
 	SUB		cross2:r3, y1_f, y2_f	@ reversed (negative)
-	MLAS	cross1, cross2, num, cross1
-	BGE		end_draw_triangle
+	MLAS	cross1, cross2, num, cross1		@ only sets Z and N flags
+	BPL		end_draw_triangle
 
 	@ calc right slope = (x3 - x1) / (y3 - y1)
 
