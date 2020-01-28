@@ -31,7 +31,6 @@ divide:
 	@ here comes the divide loop
 	@ except we can skip part of it
 	@ count leading bits common to both numerator and demoninator
-	@ super spooky
 	MOV		count:r3, #28
 	LSR		mod:r2, num, #4		@ remainder
 
@@ -81,7 +80,7 @@ numLeDen:
 	BX		lr
 
 powerOf2:
-	@ count the bits. things get spooky
+	@ count the bits
 	MOV		count:r3, #0
 
 	CMP		den, #(1 << 16)
@@ -94,7 +93,7 @@ powerOf2:
 	ADDHS	count, #4
 	LSRHS	den, #4
 	CMP		den, #(1 << 2)
-	ADDHI	count, #3	@ spooky
+	ADDHI	count, #3
 	ADDLS	count, den, LSR #1
 
 	LSR		num, count
