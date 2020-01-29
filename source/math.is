@@ -7,7 +7,7 @@ divide:
 	num:r0		@ numerator, return quotient
 	den:r1		@ denominator
 
-	@ http://me.henri.net/fp-div.html
+	@ division algorithm from http://me.henri.net/fp-div.html
 	@ (page has some mistakes. a few have been marked corrected)
 
 	CMP		den, #0				@ divide by zero?
