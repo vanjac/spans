@@ -1,7 +1,7 @@
 3D renderer for the GBA. Work in progress.
 
-- Import and draw meshes from OBJ files
-- Very fast solid-filled triangles
+- Export models from Blender
+- Fast solid-filled triangles
 - Subpixel accuracy
 - Currently renders [Suzanne](https://en.wikipedia.org/wiki/Blender_(software)#Suzanne,_the_%22monkey%22_mascot) (968 triangles) at ~40 FPS.
 
