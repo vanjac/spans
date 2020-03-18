@@ -1,5 +1,6 @@
-3D renderer for the GBA. Work in progress.
+3D renderer for the Game Boy Advance. Work in progress.
 
+- All code written in ARM assembly
 - Export models from Blender
 - Fast solid-filled triangles
 - Subpixel accuracy
