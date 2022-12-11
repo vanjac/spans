@@ -1,6 +1,6 @@
 # Spans
 
-3D renderer for the Game Boy Advance. Work in progress.
+Small, uninished 3D renderer for the Game Boy Advance.
 
 - All code written in ARM assembly
 - Export models from Blender
