@@ -4,7 +4,7 @@ import bmesh
 
 bl_info = {
     "name": "Export GBA Assembly",
-    "author": "Jacob van't Hoog",
+    "author": "chroma zone",
     "version": (1, 0, 0),
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
